@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+#canvas {
+	position: absolute;
+	left: -200px;
+	top: -160px;
+}
+</style>
+<link rel="stylesheet" href="/css/style.css" />
+<script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" th:inline="javascript">
+	/*<![CDATA[*/
+
+	$(function() {
+		//创建画布
+		var context = canvas.getContext("2d");
+		//获取摄像头展示对象
+		var video = document.getElementById("video");
+		//判断浏览器是否支持硬件
+		navigator.getUserMedia = navigator.getUserMedia
+				|| navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+				|| navigator.msGetUserMedia;
+		if (navigator.getUserMedia) {
+			// 			alert("支持");
+		} else {
+			// 			alert("不支持");
+		}
+		//添加硬件
+		var navigatorUM = navigator.getUserMedia({
+			// 	audio : true,
+			video : true
+		}, onSuccess, onError);
+		//成功回调,将摄像头展示在video标签上
+		function onSuccess(stream) {
+			var video = document.querySelector("video");
+			video.src = window.URL.createObjectURL(stream);
+		}
+		//失败回调
+		function onError(error) {
+			console.log("navigator.getUserMedia error: ", error);
+		}
+		//倒计时
+		var i = 10;
+		var countdown = null;
+		function timeShow() {
+			i--;
+			$(".countdown").html("倒计时" + i + "秒");
+			if (i < 1) {
+				clearInterval(countdown);
+				$(".countdown").html("倒计时结束！！");
+				$("#video").remove();
+				context.drawImage(video, 200, 150, 500, 400);
+				CatchCode();
+			}
+		}
+		;
+		countdown = setInterval(timeShow, 1000);
+	});
+	//上传服务器
+	function CatchCode() {
+		//获取浏览器页面的画布对象
+		var canvans = document.getElementById("canvas");
+		//以下开始编 数据
+		var imgData = canvans.toDataURL();
+		//将图像转换为base64数据
+		var base64Data = imgData.substr(22);
+		$.ajax({
+			type : "POST",
+			url : "/getPointByUploadImg",
+			data : {
+				'image' : base64Data
+			},
+			success : function(results) {
+				if (results) {
+					alert("恭喜您获得了：" + results);
+				} else {
+					alert("获取您的图片失败了，想要获取更高的分数吗？露出您的笑容就可以喽！")
+				}
+				//倒计时
+				var i = 10;
+				var countdown = null;
+				function timeShow() {
+					i--;
+					$(".countdown").html("倒计时" + i + "秒");
+					if (i < 1) {
+						// 						clearInterval(countdown);
+						$(".countdown").html("倒计时结束！！");
+						// 						window.location.reload();
+					}
+				}
+				;
+				countdown = setInterval(timeShow, 1000);
+			}
+		});
+	}
+	/*]]>*/
+</script>
+<title>识别</title>
+</head>
+<body>
+	<div class="box2 box">
+		<img src="/img/head-bg.jpg" alt="" />
+	</div>
+	<div class="title-head">
+		<video id="video" autoplay="autoplay">
+		</video>
+		<canvas id="canvas" width="840" height="840"></canvas>
+	</div>
+</body>
+</html>
